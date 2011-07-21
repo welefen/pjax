@@ -9,9 +9,9 @@ demo地址： <http://www.welefen.com>， 点击页面中的链接就可以看�
 
 ## 已经使用该技术的网站
 
-github.com
+www.github.com
 
-plus.google.com
+http://plus.google.com
 
 www.welefen.com 以及使用了plus主题的wordpress博客等
 
