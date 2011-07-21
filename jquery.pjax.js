@@ -19,7 +19,7 @@
 	var pjaxStack = {}; //pjax数据缓存
 	//获取当前的时间
 	function getTime(){
-		return +new Date;
+		return new Date*1;
 	}
 	//获取不带hash的url
 	function getRealUrl(src){
