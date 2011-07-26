@@ -2,7 +2,7 @@
 
 pushState是一个可以操作history的api，该api的介绍和使用请见这里：http://www.welefen.com/use-ajax-and-pushstate.html
 
-目前已经有http://github.com/, http://plus.google.com, http://www.welefen.com等网站已经使用。
+目前已经有http://github.com/, http://plus.google.com, http://www.welefen.com 等网站已经使用。
 
 pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技术。
 
