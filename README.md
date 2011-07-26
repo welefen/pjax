@@ -47,4 +47,27 @@ pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技
 	})
 ```
 
+## 浏览器支持
+
+提供了history.pushState接口的浏览器才支持这个功能，$.support.pjax是用来判断浏览器是否支持的。
+
+如果浏览器不支持这个功能而调用pjax方法的话，实际上什么都没做，还是使用默认的链接响应机制
+
+## 后端需要做的
+
+类似于ajax, 异步请求的时候后端不能将公用的内容也返回。
+
+所以需要一个判断是否pjax请求的接口。如：php可以借鉴下面的实现
+
+```
+	function gplus_is_pjax(){
+		return array_key_exists('HTTP_X_PJAX', $_SERVER) && $_SERVER['HTTP_X_PJAX'] === 'true';
+	}	
+```
+
+## 其他
+
+实际上该类的封装借鉴于https://github.com/defunkt/jquery-pjax
+
+对其增加了缓存、本地存储和动画等功能，并且将一些参数进行了优化。
 
