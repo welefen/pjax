@@ -26,6 +26,25 @@ pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技
 	})
 
 ```
+## 事件(events)
 
+一般情况下使用ajax来获取数据的时候，我们都希望有个loading的效果，pjax本身不提供这个功能，但提供了2个相关的事件。
+
+如果需要这样的功能，可以在事件里实现这种功能。
+
+* start.pjax 在pjax ajax发送request之前调用
+
+* end.pjax 在phax ajax结束时调用
+
+这样你可以在start.pjax事件里显示loading效果，在end.pjax事件里隐藏loading了。如：
+
+```
+	$('#container').bind('start.pjax', function(){
+		$('#loading').show();
+	})
+	$('#container').bind('end.pjax', function(){
+		$('#loading').hide();
+	})
+```
 
 
