@@ -1,19 +1,15 @@
 ## 介绍
-pjax是使用ajax + pushstate 达到无刷新改变页面内容并可以改变URL的技术，
 
-该技术可以对原生的a链接的体验进行增强，不支持该技术的浏览器还是用链接的方式打开页面。支持的浏览器则使用pjax技术。
+pushState是一个可以操作history的api，该api的介绍和使用请见这里：http://www.welefen.com/use-ajax-and-pushstate.html
 
-jquery.pjax.js 是对ajax + pushstate 进行封装，这样就可以很方便的使用该技术在你的网站中。
+目前已经有http://github.com/, http://plus.google.com, http://www.welefen.com等网站已经使用。
 
-demo地址： <http://www.welefen.com>， 点击页面中的链接就可以看到效果了。
+pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技术。
 
-## 已经使用该技术的网站
+同时支持了缓存和本地存储，下次访问的时候直接读取本地数据，无需在次访问。
 
-www.github.com
+并且展现方式支持动画技术，可以使用系统自带的动画方式，也可以自定义动画展现方式。
 
-http://plus.google.com
-
-www.welefen.com 以及使用了plus主题的wordpress博客等
 
 ## 如何使用
 
@@ -21,7 +17,13 @@ www.welefen.com 以及使用了plus主题的wordpress博客等
 
 
 ```
-
+	$('a').pjax({
+		container: '#container', //内容替换的容器
+		fx: 'fade',  //展现的动画，支持默认和fade, 可以自定义动画方式，这里为自定义的function即可。
+		cache: true,  //是否使用缓存
+		storage: true,  //是否使用本地存储
+		titleSuffix: '' //标题后缀
+	})
 
 ```
 

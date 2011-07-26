@@ -1,4 +1,8 @@
 /*!
+ * jquery.pjax.js
+ * 
+ * https://github.com/welefen/pjax
+ * 
  * by welefen
  */
 (function($){
@@ -149,9 +153,7 @@
 		if(options){
 			options.container = container;
 		}else{
-			options = {
-				container: container
-			};
+			options = $.isPlainObject(container) ? container : {container:container}; 
 		}
 		var obj, container = $(options.container);
 		delete options.callback;
