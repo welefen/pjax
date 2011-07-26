@@ -1,6 +1,4 @@
 /*!
- * ajax + pushstate = pjax
- * 
  * by welefen
  */
 (function($){
@@ -19,7 +17,7 @@
 	var pjaxStack = {}; //pjax数据缓存
 	//获取当前的时间
 	function getTime(){
-		return new Date*1;
+		return new Date * 1;
 	}
 	//获取不带hash的url
 	function getRealUrl(src){
@@ -33,6 +31,16 @@
 			time: s + '_time',
 			title: s + '_title'
 		};
+	}
+	//清除所有的本地缓存
+	function removeAllCache(){
+		if($.support.storage){
+			for(var name in localStorage){
+				if((name.split('_') || [''])[0] === 'pjax'){
+					delete localStorage[name];
+				}
+			}
+		}
 	}
 	//获取缓存
 	function getCache(src, time, flag){
@@ -92,29 +100,39 @@
 		}).addClass('pjax-item').html($(data).html());
 	}
 	var showFx = {
-		"_default" : function(data, callback){
+		"_default" : function(data, callback, isCache){
 			this.html(data);
-			callback && callback.call(this, data);
+			callback && callback.call(this, data, isCache);
 		},
-		"fade": function(data, callback){
+		"fade": function(data, callback, isCache){
 			var $this = this;
-			this.fadeOut(10, function(){
-				$this.html(data).fadeIn(100, function(){
-					callback && callback.call($this, data);
+			if(isCache){
+				$this.html(data);
+				callback && callback.call($this, data, isCache);
+			}else{
+				this.fadeOut(500, function(){
+					$this.html(data).fadeIn(500, function(){
+						callback && callback.call($this, data, isCache);
+					});
 				});
-			});
+			}
 		}
 	};
-	var callback = function(show, container, data, fn){
-		if(!(show in showFx)){
-			show = "_default";
+	var callback = function(fx, container, data, fn, isCache){
+		var obj;
+		if(typeof fx === 'function'){
+			obj = fx;
+		}else{
+			if(!(fx in showFx)){
+				fx = "_default";
+			}
+			obj = showFx[fx];
+			if($.isPlainObject(obj)){
+				var init = obj.init;
+				init && init.call(container, isCache);
+				obj = obj.callback;
+			};
 		}
-		var obj = showFx[show];
-		if($.isPlainObject(obj)){
-			var init = obj.init;
-			init && init.call(container);
-			obj = obj.callback;
-		};
 		obj && obj.call(container, data, function(){
 			hash = location.hash;
 			if (hash != '') {
@@ -124,8 +142,8 @@
 					scrollTop: 0
 				});
 			}
-			fn && fn.call(this, data);
-		});
+			fn && fn.call(this, data, isCache);
+		}, isCache);
 	};
 	$.fn.pjax = function(container, options){
 		if(options){
@@ -135,13 +153,14 @@
 				container: container
 			};
 		}
-		var show = (options.show || '').toLowerCase(), obj, container = $(options.container);
+		var obj, container = $(options.container);
 		delete options.callback;
-
+		
 		return this.live('click', function(event){
 			if ( event.which > 1 || event.metaKey ){
 				return true;
 			}
+			
 			if(getRealUrl(this.href) == getRealUrl(location.href)){
 				var hash = location.hash;
 				if (hash != '') {
@@ -153,9 +172,9 @@
 			$.pjax($.extend(true, {}, {
 				url: this.href,
 				element: this,
-				show:'',
-				callback: function(data, fn){
-					callback(options.show, container, data, fn);
+				fx:'',
+				callback: function(data, fn, isCache){
+					callback(options.fx, container, data, fn, isCache);
 				}
 			}, options));
 		});
@@ -183,12 +202,16 @@
 			error: function(){
 				window.location = options.url;
 			},
-			success: function(data){
+			success: function(data, isCache){
+				//isCache default is success
+				if(isCache !== true){
+					isCache = false;
+				}
 				if((data||'').indexOf('<html') != -1){
 					location.href = options.url;
 					return false;
 				}
-				var dom = $(data), title = options.title, el, state, hash;
+				var dom = $(data), title = options.title, el, state;
 				if(!title){
 					title = dom.find('title').remove().text();
 					if(!title && options.element){
@@ -225,7 +248,7 @@
 				}
 				options.callback && options.callback(dom, function(){
 					container.trigger('end.pjax');
-				});
+				}, isCache);
 				if(options.cache){
 					setCache(getRealUrl(options.url), data, title, options.storage);
 				}
@@ -241,14 +264,18 @@
 			options.cache = 24*3600;
 		}
 		if(!options.callback){
-			options.callback = function(data, fn){
-				callback(options.show, container, data, fn);
+			options.callback = function(data, fn, isCache){
+				callback(options.show, container, data, fn, isCache);
 			};
+		}
+		//如果将缓存时间设为0，则将之前的缓存也清除
+		if((options.cache | 0) === 0){
+			removeAllCache();
 		}
 		if(options.cache && (cache = getCache(getRealUrl(options.url), options.cache, options.storage))){
 			container.trigger('start.pjax');
 			options.title = cache.title;
-			options.success(cache.data);
+			options.success(cache.data, true);
 			return true;
 		}
 		xhr = $.pjax.xhr;
@@ -299,3 +326,4 @@
 	}
 
 })(jQuery);
+
