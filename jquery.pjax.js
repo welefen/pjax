@@ -1,8 +1,4 @@
 /*!
- * jquery.pjax.js
- * 
- * https://github.com/welefen/pjax
- * 
  * by welefen
  */
 (function($){
@@ -25,7 +21,9 @@
 	}
 	//获取不带hash的url
 	function getRealUrl(src){
-		return (src || '').replace(/\#.*?$/, '');
+		src = (src || '').replace(/\#.*?$/, '');
+		src = src.replace('?pjax=true', '').replace('&pjax=true', '');
+		return src;
 	}
 	//获取本地储存的key
 	function getLocalKey(src){
@@ -49,6 +47,7 @@
 	//获取缓存
 	function getCache(src, time, flag){
 		var item, vkey, tkey, tval;
+		time = time | 0;
 		if(src in pjaxStack){
 			item = pjaxStack[src], ctime = getTime();
 			if((item.time + time*1000) > ctime){
@@ -62,7 +61,7 @@
 			tkey = l.time;
 			item = window.localStorage.getItem(vkey);
 			if(item){
-				tval = window.localStorage.getItem(tkey);
+				tval = window.localStorage.getItem(tkey) | 0;
 				if((tval + time*1000) > getTime()){
 					return {data: item, title: localStorage.getItem(l.title)};
 				}else{
@@ -153,7 +152,7 @@
 		if(options){
 			options.container = container;
 		}else{
-			options = $.isPlainObject(container) ? container : {container:container}; 
+			options = $.isPlainObject(container) ? container : {container:container};
 		}
 		var obj, container = $(options.container);
 		delete options.callback;
@@ -194,7 +193,9 @@
 			title: '', 		//标题
 			titleSuffix: '', //标题后缀
 			type: 'GET',
-			data: {},
+			data: {
+				pjax: true
+			},
 			dataType: 'html',
 			callback: null, //回调函数 
 			beforeSend: function(xhr){
@@ -245,8 +246,10 @@
 				}else if(options.push === false){
 					 window.history.replaceState(state, document.title, options.url);
 				}
-				if(options.push !== null && window._gaq){
-					_gaq.push(['_trackPageview']);
+				if(options.push !== null){
+					if(window._gaq){
+						_gaq.push(['_trackPageview']);
+					}
 				}
 				options.callback && options.callback(dom, function(){
 					container.trigger('end.pjax');
@@ -301,6 +304,7 @@
 		  if ( state && state.container ) {
 		    container = state.container;
 		    if ( $(container).length ){
+		    	
 		    	 $.pjax({
 				        url: state.url || location.href,
 				        container: container,
@@ -328,4 +332,3 @@
 	}
 
 })(jQuery);
-
