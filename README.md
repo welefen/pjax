@@ -10,7 +10,6 @@ pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技
 
 并且展现方式支持动画技术，可以使用系统自带的动画方式，也可以自定义动画展现方式。
 
-目前只提供了基于jquery的版本，后续将增加基于qwrap, tangram等版本。
 
 
 ## 如何使用
@@ -30,6 +29,15 @@ pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技
 
 ```
 ### qwrap版
+
+qwrap版需要在页面引入qwrap和对应的ajax组件。
+
+qwrap见： https://github.com/jkisjk/qwrap
+
+对应的ajax组件见： https://github.com/jkisjk/qwrap/tree/master/resource/js/wagang/ajax
+
+或者你直接引用我打包好的： http://www.welefen.com/wp-content/themes/gplus/js/qwrap.js 由于我的空间速度不咋地，建议你另存为。
+
 
 ```
 	QW.pjax(selector, { //selector一般为a[href="^http://domain"]
