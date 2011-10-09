@@ -15,6 +15,7 @@ pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技
 
 ## 如何使用
 
+### jquery版
 将jquery.pjax.js部署到你的页面中，将需要使用pjax的a链接进行绑定（不能绑定外域的url），如:
 
 
@@ -25,6 +26,16 @@ pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技
 		cache: true,  //是否使用缓存
 		storage: true,  //是否使用本地存储
 		titleSuffix: '' //标题后缀
+	})
+
+```
+### qwrap版
+
+```
+	QW.pjax(selector, { //selector一般为a[href="^http://domain"]
+		container: '#container',
+		cache: true,
+		storage: true
 	})
 
 ```
