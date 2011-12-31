@@ -24,7 +24,6 @@
 	//获取不带hash的url
 	function getRealUrl(src){
 		src = (src || '').replace(/\#.*?$/, '');
-		src = src.replace('?pjax=true', '').replace('&pjax=true', '');
 		return src;
 	}
 	//获取本地储存的key
@@ -49,7 +48,7 @@
 	//获取缓存
 	function getCache(src, time, flag){
 		var item, vkey, tkey, tval;
-		time = time | 0;
+		time = parseInt(time);
 		if(src in pjaxStack){
 			item = pjaxStack[src], ctime = getTime();
 			if((item.time + time*1000) > ctime){
@@ -63,7 +62,7 @@
 			tkey = l.time;
 			item = localStorage.getItem(vkey);
 			if(item){
-				tval = localStorage.getItem(tkey) | 0;
+				tval = parseInt(localStorage.getItem(tkey));
 				if((tval + time*1000) > getTime()){
 					return {data: item, title: localStorage.getItem(l.title)};
 				}else{
@@ -123,9 +122,7 @@
 			if (hash != '') {
 				window.location.href = hash;
 			}else{
-				W('html,body').attr({
-					scrollTop: 0
-				});
+				window.scrollTo(0, 0);
 			}
 			fn && fn.call(this, data, isCache);
 		}, isCache);
@@ -134,29 +131,34 @@
 		options = mix({
 			container: ''
 		}, options, true);
+
 		if(!options.container) return true;
+		pjax.options = options;
+
 		var container = W(options.container);
+
 		W('body').delegate(selector, 'click', function(event){
 			if ( event.which > 1 || event.metaKey ){
 				return true;
 			}
+
 			if(isFunction(options.filter)){
 				if(options.filter.call(this, this) === false) return true;
 			}
+
 			if(getRealUrl(this.href) == getRealUrl(location.href)){
 				var hash = location.hash;
 				if (hash != '') {
 					location.href = hash;
+					return true;
 				}
-				return true;
 			}
+
 			event.preventDefault();
+
 			pjax.request(mix({
 				url: this.href,
-				element: this,
-				callback: function(data, fn, isCache){
-					callback(options.fx, container, data, fn, isCache);
-				}
+				element: this
 			}, options, true));
 		})
 	}
@@ -165,7 +167,7 @@
 	pjax.request = function(options){
 		var container = W(options.container), url, xhr, cache;
 		options = mix({
-			timeout:2000, 
+			timeout:30000, 
 			element: null,
 			cache: 24*3600, //缓存时间, 0为不缓存, 单位为秒
 			storage: true, 	//是否使用localstorage将数据保存到本地
@@ -175,13 +177,13 @@
 			title: '', 		//标题
 			titleSuffix: '', //标题后缀
 			type: 'GET',
-			data: {
-				pjax: true
-			},
 			dataType: 'html',
 			callback: null, //回调函数 
 			requestHeaders:{
-				'X-PJAX': true
+				'X-PJAX': '1'
+			},
+			oncomplete : function() {
+				pjax.ajax = null;
 			},
 			onerror: function(){
 				location.href = options.url;
@@ -198,15 +200,11 @@
 					location.href = options.url;
 					return false;
 				}
-				var dom = W(Dom.create(data)), title = options.title, el, state;
+				var title = options.title, el, state;
 				if(!title){
 					var matches = data.match(/<title>(.*?)<\/title>/);
 					if(matches){
-						title = matches[1];
-					}
-					if(!title && options.element){
-						el = W(options.element);
-						title = el.attr('title') || el.html();
+						title = matches[1].decode4Html();
 					}
 				}
 				if(title){
@@ -247,7 +245,7 @@
 			}
 		}, options, true);
 		if(W(options.element)){
-			cache = W(options.element).attr('data-pjax-cache') | 0; //各个链接里可以加自己的缓存时间，主要是应对不同的类型进行不同的缓存
+			cache = parseInt(W(options.element).attr('data-pjax-cache')); //各个链接里可以加自己的缓存时间，主要是应对不同的类型进行不同的缓存
 		}
 		if(cache){
 			options.cache = cache;
@@ -261,7 +259,7 @@
 			};
 		}
 		//如果将缓存时间设为0，则将之前的缓存也清除
-		if((options.cache | 0) === 0){
+		if((parseInt(options.cache)) === 0){
 			removeAllCache();
 		}
 		if(options.cache && (cache = getCache(getRealUrl(options.url), options.cache, options.storage))){
@@ -270,14 +268,16 @@
 			options.onsucceed(cache.data, true);
 			return true;
 		}
-		xhr = pjax.xhr;
-		if ( xhr && xhr.readyState < 4) {
-			xhr.onreadystatechange = $.noop;
-			xhr.abort();
+		var ajax = pjax.ajax;
+		if(ajax) {
+			ajax.cancel();
 		}
-		var xhr = new QW.Ajax(options);
+
+		ajax = new QW.Ajax(options);
+		ajax.send(options.url, 'get', options.data);
+		pjax.ajax = ajax;
+
 		container.fire('start.pjax');
-		pjax.xhr = xhr.send(options.url, 'get', options.data);
 	};
 	pjax.removeCache = removeCache;
 	pjax.getRealUrl = getRealUrl;
@@ -285,28 +285,39 @@
 	
 	var popped = ('state' in window.history), initURL = location.href;
 	W(window).on('popstate', function(event){
-		  var initPop = !popped && location.href == initURL, state, container;
-		  popped = true;
-		  if ( initPop ) return true;
-		  state = event.state;
-		  if ( state && state.container ) {
-		    container = state.container;
-		    if ( W(container).length ){
-		    	 pjax.request({
-				        url: state.url || location.href,
-				        container: container,
-				        push: null,
-				        timeout: state.timeout,
-				        cache: state.cache,
-				        storage: state.storage,
-				        title: state.title
-				 });
-		    	 return true;
-		    }else{
-		    	location.reload();
-		    }
-		  }
+		var initPop = !popped && location.href == initURL, state, data, container;
+		popped = true;
+		if ( initPop ) return true;
+		state = event.state;
+		if( !state ) {
+			var options = pjax.options;
+			data = {
+				url: initURL,
+				container : options.container,
+				push: null,
+				timeout : options.timeout,
+				cache: options.cache,
+				storage: options.storage
+			};
+		} else {
+			data = {
+		        url: state.url || location.href,
+		        container: state.container,
+		        push: null,
+		        timeout: state.timeout,
+		        cache: state.cache,
+		        storage: state.storage
+			 };
+		}
+	    container = data.container;
+
+	    if ( W(container).length ){
+	    	 pjax.request(data);
+	    }else{
+	    	location.reload();
+	    }
 	});
+
 	if(!supportPjax){
 		pjax = function(selector, options){
 			return false;
