@@ -19,12 +19,15 @@ pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技
 
 
 ```
-	$('a').pjax({
+	$.pjax({
+		selector: 'a',
 		container: '#container', //内容替换的容器
-		fx: 'fade',  //展现的动画，支持默认和fade, 可以自定义动画方式，这里为自定义的function即可。
+		show: 'fade',  //展现的动画，支持默认和fade, 可以自定义动画方式，这里为自定义的function即可。
 		cache: true,  //是否使用缓存
 		storage: true,  //是否使用本地存储
-		titleSuffix: '' //标题后缀
+		titleSuffix: '', //标题后缀
+		filter: function(){},
+		callback: function(){}
 	})
 
 ```
@@ -53,17 +56,17 @@ qwrap见： https://github.com/jkisjk/qwrap
 
 如果需要这样的功能，可以在事件里实现这种功能。
 
-* start.pjax 在pjax ajax发送request之前调用
+* pjax.start 在pjax ajax发送request之前调用
 
-* end.pjax 在phax ajax结束时调用
+* pjax.end 在phax ajax结束时调用
 
-这样你可以在start.pjax事件里显示loading效果，在end.pjax事件里隐藏loading了。如：
+这样你可以在pjax.start事件里显示loading效果，在pjax.end事件里隐藏loading了。如：
 
 ```
-	$('#container').bind('start.pjax', function(){
+	$('#container').bind('pjax.start', function(){
 		$('#loading').show();
 	})
-	$('#container').bind('end.pjax', function(){
+	$('#container').bind('pjax.start', function(){
 		$('#loading').hide();
 	})
 ```
@@ -81,8 +84,8 @@ qwrap见： https://github.com/jkisjk/qwrap
 所以需要一个判断是否pjax请求的接口。如：php可以借鉴下面的实现
 
 ```
-	function gplus_is_pjax(){
-		return array_key_exists('HTTP_X_PJAX', $_SERVER) && $_SERVER['HTTP_X_PJAX'] === 'true';
+	function is_pjax(){
+		return array_key_exists('HTTP_X_PJAX', $_SERVER) && $_SERVER['HTTP_X_PJAX'];
 	}	
 ```
 
