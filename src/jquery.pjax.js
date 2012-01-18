@@ -288,7 +288,7 @@
 		}
 		pjax.options.showFn && pjax.options.showFn(data, function() {
 			pjax.options.callback && pjax.options.callback.call(pjax.options.element,{
-				type : 'success'
+				type : isCached? 'cache' : 'success'
 			});
 		}, isCached);
 		// 设置cache

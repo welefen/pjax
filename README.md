@@ -56,6 +56,57 @@ qwrap见： https://github.com/jkisjk/qwrap
 ```
 ## 参数及含义
 
+#### options.selector
+给哪些selector绑定pjax事件，一般的为："a", 如果要去掉一些外连的URL， 这里的selector可以为: "a[href^='http://www.welefen.com']"，表示域名是www.welefen.com下才有pjax事件（也就是站内）。
+
+#### options.container
+内容变换容器，是指哪个容器里的内容发生的变换，如： '#content',
+
+#### options.cache
+缓存pjax的内容，对于更新不频繁的页面来说，缓存pjax内容可以减少HTTP请求数
+
+options.cache的值是缓存时间，单位为秒，默认为: 24*3600(一天)
+#### options.storage
+是否使用本地存储进行内容的缓存，使用本地存储缓存的话即使关闭浏览器后，下次访问如果缓存时间有效的话会直接读取缓存的内容，避免重新请求了。
+
+#### options.titleSuffix
+标题后缀。
+
+对于pjax显示标题，首先会从返回内容里查找，如果没有的话，会取当前a标签的title值，并可以指定统一的后缀
+
+#### options.filter
+过滤函数，虽然options.selector可以写个比较复杂的选择器，但有时候还要过滤一些URL，如：后台的URL。
+
+这时候就可以使用options.filter函数进行过滤了。如：
+
+```
+	{
+		fitler: function(href){
+			//对于wordpress后台的URL和wp-content里的URL不使用pjax
+			if(href.indexOf('/wp-admin') || href.indexOf('/wp-content')){
+				return true;
+			}
+		}
+	}
+```
+#### options.callback
+回调函数，这个函数不同于pjax.start和pjax.end（这2个事件下面描述）事件。
+
+该函数会在每个阶段都会执行，即使pjax发生error的时候，并且会传递一个参数标明当前的状态，如：
+
+```
+	{
+		callback: function(status){
+			var type = status.type;
+			switch(type){
+				case 'success': ;break; //正常
+				case 'cache':;break; //读取缓存	
+				case 'error': ;break; //发生异常
+				case 'hash': ;break; //只是hash变化
+			}
+		}
+	}
+```
 
 ## 事件(events)
 
