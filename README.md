@@ -80,7 +80,7 @@ qwrap见： https://github.com/jkisjk/qwrap
 
 ## 浏览器支持
 
-提供了history.pushState接口的浏览器才支持这个功能，$.support.pjax是用来判断浏览器是否支持的。
+提供了history.pushState接口的浏览器才支持这个功能
 
 如果浏览器不支持这个功能而调用pjax方法的话，实际上什么都没做，还是使用默认的链接响应机制
 
@@ -98,7 +98,7 @@ qwrap见： https://github.com/jkisjk/qwrap
 
 ## 其他
 
-实际上该类的封装借鉴于https://github.com/defunkt/jquery-pjax
+实际上该类的封装借鉴于<https://github.com/defunkt/jquery-pjax>
 
 对其增加了缓存、本地存储和动画等功能，并且将一些参数进行了优化。
 
