@@ -43,13 +43,20 @@ qwrap见： https://github.com/jkisjk/qwrap
 
 
 ```
-	QW.pjax(selector, { //selector一般为a[href="^http://domain"]
+	QW.pjax(
+		selector: 'a',
 		container: '#container',
 		cache: true,
-		storage: true
+		storage: true,
+		titleSuffix: '',
+		filter: function(){},
+		callback: function(){}
 	})
 
 ```
+## 参数及含义
+
+
 ## 事件(events)
 
 一般情况下使用ajax来获取数据的时候，我们都希望有个loading的效果，pjax本身不提供这个功能，但提供了2个相关的事件。
