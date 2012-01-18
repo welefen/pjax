@@ -1,336 +1,387 @@
 /*!
- * pjax(ajax+pushState) for jquery
+ * pjax(ajax + history.pushState) for jquery
  * 
  * by welefen
  */
-(function($){
-	
-	//check browser support pjax
-	$.support.pjax = !!(
-		window.history && window.history.pushState && window.history.replaceState
-		&& !(
-			(/ Mobile\/([1-7][a-z]|(8([abcde]|f(1[0-8]))))/i).test(navigator.userAgent)
-			|| (/AppleWebKit\/5([0-2]|3[0-2])/i).test(navigator.userAgent)
-		)
-	);
-	//check browser support storage
-	$.support.storage = !!window.localStorage;
-	
-	var pjaxStack = {}; //pjax数据缓存
-	//获取当前的时间
-	function getTime(){
-		return new Date * 1;
-	}
-	//获取不带hash的url
-	function getRealUrl(src){
-		src = (src || '').replace(/\#.*?$/, '');
-		src = src.replace('?pjax=true', '').replace('&pjax=true', '');
-		return src;
-	}
-	//获取本地储存的key
-	function getLocalKey(src){
-		var s = 'pjax_' + encodeURIComponent(src);
-		return {
-			data: s + '_data',
-			time: s + '_time',
-			title: s + '_title'
-		};
-	}
-	//清除所有的本地缓存
-	function removeAllCache(){
-		if($.support.storage){
-			for(var name in localStorage){
-				if((name.split('_') || [''])[0] === 'pjax'){
+(function($) {
+	var Util = {
+		support : {
+			pjax : window.history && window.history.pushState && window.history.replaceState && !navigator.userAgent.match(/(iPod|iPhone|iPad|WebApps\/.+CFNetwork)/),
+			storage : !!window.localStorage
+		},
+		toInt : function(obj) {
+			return parseInt(obj);
+		},
+		stack : {},
+		getTime : function() {
+			return new Date * 1;
+		},
+		// 获取URL不带hash的部分,切去掉pjax=true部分
+		getRealUrl : function(url) {
+			url = (url || '').replace(/\#.*?$/, '');
+			url = url.replace('?pjax=true', '').replace('&pjax=true', '');
+			return url;
+		},
+		// 获取url的hash部分
+		getUrlHash : function(url) {
+			return url.replace(/^[^\#]*(?:\#(.*?))?$/, '$1');
+		},
+		// 获取本地存储的key
+		getLocalKey : function(src) {
+			var s = 'pjax_' + encodeURIComponent(src);
+			return {
+				data : s + '_data',
+				time : s + '_time',
+				title : s + '_title'
+			};
+		},
+		// 清除所有的cache
+		removeAllCache : function() {
+			if (!Util.support.storage)
+				return;
+			for ( var name in localStorage) {
+				if ((name.split('_') || [ '' ])[0] === 'pjax') {
 					delete localStorage[name];
 				}
 			}
-		}
-	}
-	//获取缓存
-	function getCache(src, time, flag){
-		var item, vkey, tkey, tval;
-		time = time | 0;
-		if(src in pjaxStack){
-			item = pjaxStack[src], ctime = getTime();
-			if((item.time + time*1000) > ctime){
-				return item;
-			}else{
-				delete pjaxStack[src];
-			}
-		}else if(flag && $.support.storage){ //从localStorage里查询
-			var l = getLocalKey(src);
-			vkey = l.data;
-			tkey = l.time;
-			item = window.localStorage.getItem(vkey);
-			if(item){
-				tval = window.localStorage.getItem(tkey) | 0;
-				if((tval + time*1000) > getTime()){
-					return {data: item, title: localStorage.getItem(l.title)};
-				}else{
-					window.localStorage.removeItem(vkey);
-					window.localStorage.removeItem(tkey);
-					window.localStorage.removeItem(l.title);
+		},
+		// 获取cache
+		getCache : function(src, time, flag) {
+			var item, vkey, tkey, tval;
+			time = Util.toInt(time);
+			if (src in Util.stack) {
+				item = Util.stack[src], ctime = Util.getTime();
+				if ((item.time + time * 1000) > ctime) {
+					return item;
+				} else {
+					delete Util.stack[src];
+				}
+			} else if (flag && Util.support.storage) { // 从localStorage里查询
+				var l = Util.getLocalKey(src);
+				vkey = l.data;
+				tkey = l.time;
+				item = localStorage.getItem(vkey);
+				if (item) {
+					tval = Util.toInt(localStorage.getItem(tkey));
+					if ((tval + time * 1000) > Util.getTime()) {
+						return {
+							data : item,
+							title : localStorage.getItem(l.title)
+						};
+					} else {
+						localStorage.removeItem(vkey);
+						localStorage.removeItem(tkey);
+						localStorage.removeItem(l.title);
+					}
 				}
 			}
-		}
-		return null;
-	}
-	//设置缓存
-	function setCache(src, data, title, flag){
-		var time = getTime(), key;
-		pjaxStack[src] = {data: data, title: title, time: time};
-		if(flag && $.support.storage){
-			key = getLocalKey(src);
-			localStorage.setItem(key.data, data);
-			localStorage.setItem(key.time, time);
-			localStorage.setItem(key.title, title);
-		}
-	}
-	//清除缓存
-	function removeCache(src){
-		src = src || location.href;
-		delete pjaxStack[getRealUrl(src)];
-		if($.support.storage){
-			var key = getLocalKey(src);
-			window.localStorage.removeItem(key.data);
-			window.localStorage.removeItem(key.time);
-			window.localStorage.removeItem(key.title);
-		}
-	}
-	function createItem(data, width){
-		return $('<div></div>').css({
-			width: width,
-			overflow: 'hidden',
-			"float": 'left'
-		}).addClass('pjax-item').html($(data).html());
-	}
-	var showFx = {
-		"_default" : function(data, callback, isCache){
-			this.html(data);
-			callback && callback.call(this, data, isCache);
+			return null;
 		},
-		"fade": function(data, callback, isCache){
-			var $this = this;
-			if(isCache){
-				$this.html(data);
-				callback && callback.call($this, data, isCache);
-			}else{
-				this.fadeOut(500, function(){
-					$this.html(data).fadeIn(500, function(){
-						callback && callback.call($this, data, isCache);
-					});
-				});
-			}
-		}
-	};
-	var callback = function(fx, container, data, fn, isCache){
-		var obj;
-		if(typeof fx === 'function'){
-			obj = fx;
-		}else{
-			if(!(fx in showFx)){
-				fx = "_default";
-			}
-			obj = showFx[fx];
-			if($.isPlainObject(obj)){
-				var init = obj.init;
-				init && init.call(container, isCache);
-				obj = obj.callback;
+		// 设置cache
+		setCache : function(src, data, title, flag) {
+			var time = Util.getTime(), key;
+			Util.stack[src] = {
+				data : data,
+				title : title,
+				time : time
 			};
-		}
-		obj && obj.call(container, data, function(){
-			hash = location.hash;
-			if (hash != '') {
-				window.location.href = hash;
-			}else{
-				$('html,body').animate({
-					scrollTop: 0
-				});
+			if (flag && Util.support.storage) {
+				key = Util.getLocalKey(src);
+				localStorage.setItem(key.data, data);
+				localStorage.setItem(key.time, time);
+				localStorage.setItem(key.title, title);
 			}
-			fn && fn.call(this, data, isCache);
-		}, isCache);
-	};
-	$.fn.pjax = function(container, options){
-		if(options){
-			options.container = container;
-		}else{
-			options = $.isPlainObject(container) ? container : {container:container};
+		},
+		// 清除cache
+		removeCache : function(src) {
+			src = src || location.href;
+			delete Util.stack[Util.getRealUrl(src)];
+			if (Util.support.storage) {
+				var key = Util.getLocalKey(src);
+				localStorage.removeItem(key.data);
+				localStorage.removeItem(key.time);
+				localStorage.removeItem(key.title);
+			}
 		}
-		var obj, container = $(options.container);
-		delete options.callback;
-		
-		return this.live('click', function(event){
-			if ( event.which > 1 || event.metaKey ){
+	};
+	// pjax
+	var pjax = function(options) {
+		options = $.extend({
+			selector : '',
+			container : '',
+			callback : function() {},
+			fitler : function() {}
+		}, options);
+		if (!options.container || !options.selector) {
+			throw new Error('selector & container options must be set');
+		}
+		$('body').delegate(options.selector, 'click', function(event) {
+			if (event.which > 1 || event.metaKey) {
 				return true;
 			}
-			
-			if(getRealUrl(this.href) == getRealUrl(location.href)){
-				var hash = location.hash;
-				if (hash != '') {
-					window.location.href = hash;
+			var $this = $(this), href = $this.attr('href');
+			// 过滤
+			if (typeof options.filter === 'function') {
+				if (options.filter.call(this, href, this) === true){
+					return true;
+				}
+			}
+			if (href === location.href) {
+				return true;
+			}
+			// 只是hash不同
+			if (Util.getRealUrl(href) == Util.getRealUrl(location.href)) {
+				var hash = Util.getUrlHash(href);
+				if (hash) {
+					location.hash = hash;
+					options.callback && options.callback.call(this, {
+						type : 'hash'
+					});
 				}
 				return true;
 			}
 			event.preventDefault();
-			$.pjax($.extend(true, {}, {
-				url: this.href,
-				element: this,
-				fx:'',
-				callback: function(data, fn, isCache){
-					callback(options.fx, container, data, fn, isCache);
-				}
-			}, options));
+			options = $.extend(true, options, {
+				url : href,
+				element : this
+			});
+			// 发起请求
+			pjax.request(options);
 		});
 	};
-	$.pjax = function(options){
-		var container = $(options.container), url, xhr, cache;
-		options = $.extend(true, {}, {
-			timeout:2000, 
-			element: null,
-			cache: 24*3600, //缓存时间, 0为不缓存, 单位为秒
-			storage: true, 	//是否使用localstorage将数据保存到本地
-			url: '', 		//链接地址
-			push: true,    	//true is push, false is replace, null for do nothing
-			show:'',       //展示的动画
-			title: '', 		//标题
-			titleSuffix: '', //标题后缀
-			type: 'GET',
-			data: {
-				pjax: true
-			},
-			dataType: 'html',
-			callback: null, //回调函数 
-			beforeSend: function(xhr){
-				container.trigger('start.pjax');
-				xhr.setRequestHeader('X-PJAX', true);
-			},
-			error: function(){
-				window.location = options.url;
-			},
-			success: function(data, isCache){
-				//isCache default is success
-				if(isCache !== true){
-					isCache = false;
-				}
-				if((data||'').indexOf('<html') != -1){
-					location.href = options.url;
-					return false;
-				}
-				var dom = $(data), title = options.title, el, state;
-				if(!title){
-					title = dom.find('title').remove().text();
-					if(!title && options.element){
-						el = $(options.element);
-						title = el.attr('title') || el.text();
-					}
-				}
-				if(title){
-					if(title.indexOf(options.titleSuffix) == -1){
-						title += options.titleSuffix;
-					}
-					document.title = title;
-				}
-				state = {
-					container: options.container,
-					timeout: options.timeout,
-					cache: options.cache,
-					storage: options.storage,
-					show: options.show,
-					title: title,
-					url: options.url
-				};
-				var query = $.param(options.data);
-			    if ( query != "" ){
-			    	state.url = options.url + (/\?/.test(options.url) ? "&" : "?") + query;
-			    }
-				if(options.push){
-					window.history.pushState(state, document.title, options.url);
-				}else if(options.push === false){
-					 window.history.replaceState(state, document.title, options.url);
-				}
-				if(options.push !== null){
-					if(window._gaq){
-						_gaq.push(['_trackPageview']);
-					}
-				}
-				options.callback && options.callback(dom, function(){
-					container.trigger('end.pjax');
-				}, isCache);
-				if(options.cache){
-					setCache(getRealUrl(options.url), data, title, options.storage);
-				}
+	pjax.xhr = null;
+	pjax.options = {};
+	pjax.state = {};
+	
+	// 默认选项
+	pjax.defaultOptions = {
+		timeout : 2000,
+		element : null,
+		cache : 24 * 3600, // 缓存时间, 0为不缓存, 单位为秒
+		storage : true, // 是否使用localstorage将数据保存到本地
+		url : '', // 链接地址
+		push : true, // true is push, false is replace, null for do nothing
+		show : '', // 展示的动画
+		title : '', // 标题
+		titleSuffix : '',// 标题后缀
+		type : 'GET',
+		data : {
+			pjax : true
+		},
+		dataType : 'html',
+		callback : null, // 回调函数
+		// for jquery
+		beforeSend : function(xhr) {
+			$(pjax.options.container).trigger('pjax.start', [ xhr, pjax.options ]);
+			xhr && xhr.setRequestHeader('X-PJAX', true);
+		},
+		error : function() {
+			pjax.options.callback && pjax.options.callback.call(pjax.options.element, {
+				type : 'error'
+			});
+			location.href = pjax.options.url;
+		},
+		complete : function(xhr) {
+			$(pjax.options.container).trigger('pjax.end', [ xhr, pjax.options ]);
+		}
+	};
+	// 展现动画
+	pjax.showFx = {
+		"_default" : function(data, callback, isCached) {
+			this.html(data);
+			callback && callback.call(this, data, isCached);
+		},
+		fade: function(data, callback, isCached){
+			var $this = this;
+			if(isCached){
+				$this.html(data);
+				callback && callback.call($this, data, isCached);
+			}else{
+				this.fadeOut(500, function(){
+					$this.html(data).fadeIn(500, function(){
+						callback && callback.call($this, data, isCached);
+					});
+				});
 			}
-		}, options);
-		
-		cache = $(options.element).attr('data-pjax-cache') | 0; //各个链接里可以加自己的缓存时间，主要是应对不同的类型进行不同的缓存
-		
-		if(cache){
-			options.cache = cache;
 		}
-		if(options.cache === true){
-			options.cache = 24*3600;
+	}
+	// 展现函数
+	pjax.showFn = function(showType, container, data, fn, isCached) {
+		var fx = null;
+		if (typeof showType === 'function') {
+			fx = showType;
+		} else {
+			if (!(showType in pjax.showFx)) {
+				showType = "_default";
+			}
+			fx = pjax.showFx[showType];
 		}
-		if(!options.callback){
-			options.callback = function(data, fn, isCache){
-				callback(options.show, container, data, fn, isCache);
+		fx && fx.call(container, data, function() {
+			var hash = location.hash;
+			if (hash != '') {
+				location.href = hash;
+				//for FF
+				if(/Firefox/.test(navigator.userAget)){
+					history.replaceState($.extend({}, pjax.state, {
+						url : null
+					}), document.title);
+				}
+			} else {
+				window.scrollTo(0, 0);
+			}
+			fn && fn.call(this, data, isCached);
+		}, isCached);
+	}
+	// success callback
+	pjax.success = function(data, isCached) {
+		// isCached default is success
+		if (isCached !== true) {
+			isCached = false;
+		}
+		if ((data || '').indexOf('<html') != -1) {
+			pjax.options.callback && pjax.options.callback.call(pjax.options.element, {
+				type : 'error'
+			});
+			location.href = pjax.options.url;
+			return false;
+		}
+		var title = pjax.options.title, el;
+		if (!title) {
+			var matches = data.match(/<title>(.*?)<\/title>/);
+			if (matches) {
+				title = matches[1];
+			}
+			if (!title && pjax.options.element) {
+				el = $(pjax.options.element);
+				title = el.attr('title') || el.text();
+			}
+		}
+		if (title) {
+			if (title.indexOf(pjax.options.titleSuffix) == -1) {
+				title += pjax.options.titleSuffix;
+			}
+			document.title = title;
+		}
+		pjax.state = {
+			container : pjax.options.container,
+			timeout : pjax.options.timeout,
+			cache : pjax.options.cache,
+			storage : pjax.options.storage,
+			show : pjax.options.show,
+			title : title,
+			url : pjax.options.oldUrl
+		};
+		var query = $.param(pjax.options.data);
+		if (query != "") {
+			pjax.state.url = pjax.options.url + (/\?/.test(pjax.options.url) ? "&" : "?") + query;
+		}
+		if (pjax.options.push) {
+			if (!pjax.active) {
+				history.replaceState($.extend({}, pjax.state, {
+					url : null
+				}), document.title);
+				pjax.active = true;
+			}
+			history.pushState(pjax.state, document.title, pjax.options.oldUrl);
+		} else if (pjax.options.push === false) {
+			history.replaceState(pjax.state, document.title, pjax.options.oldUrl);
+		}
+		pjax.options.showFn && pjax.options.showFn(data, function() {
+			pjax.options.callback && pjax.options.callback.call(pjax.options.element,{
+				type : 'success'
+			});
+		}, isCached);
+		// 设置cache
+		if (pjax.options.cache && !isCached) {
+			alert(data);
+			Util.setCache(pjax.options.url, data, title, pjax.options.storage);
+		}
+	};
+	
+	// 发送请求
+	pjax.request = function(options) {
+		options = $.extend(true, pjax.defaultOptions, options);
+		var cache, container = $(options.container);
+		options.oldUrl = options.url;
+		options.url = Util.getRealUrl(options.url);
+		if($(options.element).length){
+			cache = Util.toInt($(options.element).attr('data-pjax-cache'));
+			if (cache) {
+				options.cache = cache;
+			}
+		}
+		if (options.cache === true) {
+			options.cache = 24 * 3600;
+		}
+		options.cache = Util.toInt(options.cache);
+		// 如果将缓存时间设为0，则将之前的缓存也清除
+		if (options.cache === 0) {
+			Util.removeAllCache();
+		}
+		// 展现函数
+		if (!options.showFn) {
+			options.showFn = function(data, fn, isCached) {
+				pjax.showFn(options.show, container, data, fn, isCached);
 			};
 		}
-		//如果将缓存时间设为0，则将之前的缓存也清除
-		if((options.cache | 0) === 0){
-			removeAllCache();
-		}
-		if(options.cache && (cache = getCache(getRealUrl(options.url), options.cache, options.storage))){
-			container.trigger('start.pjax');
+		pjax.options = options;
+		pjax.options.success = pjax.success;
+		if (options.cache && (cache = Util.getCache(options.url, options.cache, options.storage))) {
+			options.beforeSend();
 			options.title = cache.title;
-			options.success(cache.data, true);
+			pjax.success(cache.data, true);
+			options.complete();
 			return true;
 		}
-		xhr = $.pjax.xhr;
-		if ( xhr && xhr.readyState < 4) {
-			xhr.onreadystatechange = $.noop;
-			xhr.abort();
+		if (pjax.xhr && pjax.xhr.readyState < 4) {
+			pjax.xhr.onreadystatechange = $.noop;
+			pjax.xhr.abort();
 		}
-		$.pjax.xhr = $.ajax(options);
+		pjax.xhr = $.ajax(pjax.options);
 	};
-	$.pjax.removeCache = removeCache;
-	
-	if ( $.inArray('state', $.event.props) < 0 ){
-		$.event.props.push('state');
-	}
-	var popped = ('state' in window.history), initURL = location.href;
-	$(window).bind('popstate', function(event){
-		  var initPop = !popped && location.href == initURL, state, container;
-		  popped = true;
-		  if ( initPop ) return true;
-		  state = event.state;
-		  if ( state && state.container ) {
-		    container = state.container;
-		    if ( $(container).length ){
-		    	
-		    	 $.pjax({
-				        url: state.url || location.href,
-				        container: container,
-				        push: null,
-				        timeout: state.timeout,
-				        cache: state.cache,
-				        storage: state.storage,
-				        title: state.title
-				 });
-		    	 return true;
-		    }else{
-		    	location.reload();
-		    }
-		  }
+
+	// popstate event
+	var popped = ('state' in window.history), initialURL = location.href;
+	$(window).bind('popstate', function(event) {
+		var initialPop = !popped && location.href == initialURL;
+		popped = true;
+		if (initialPop) return;
+		var state = event.state;
+		if (state && state.container) {
+			if ($(state.container).length) {
+				var data = {
+					url : state.url || location.href,
+					container : state.container,
+					push : null,
+					timeout : state.timeout,
+					cache : state.cache,
+					storage : state.storage
+				};
+				pjax.request(data);
+			} else {
+				window.location = location.href;
+			}
+		}
 	});
-	if(!$.support.pjax){
-		$.fn.pjax = function(){
+
+	// not support
+	if (!Util.support.pjax) {
+		pjax = function() {
 			return true;
 		};
-		$.pjax = function(options){
-			if(options.url){
+		pjax.request = function(options) {
+			if (options && options.url) {
 				location.href = options.url;
 			}
 		};
+	}
+	// pjax bind to $
+	$.pjax = pjax;
+	$.pjax.util = Util;
+
+	// extra
+	if ($.inArray('state', $.event.props) < 0) {
+		$.event.props.push('state')
 	}
 
 })(jQuery);
