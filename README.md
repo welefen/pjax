@@ -54,6 +54,28 @@ qwrap见： https://github.com/jkisjk/qwrap
 	})
 
 ```
+### kissy版
+
+kissy版需要在页面引入kissy。
+
+kissy见： http://docs.kissyui.com/
+
+```
+        KISSY.pjax(
+                selector: 'a',
+                container: '#container',
+                cache: true,
+                storage: true,
+                titleSuffix: '',
+                filter: function(){},
+                callback: function(){}
+        })
+
+```
+
+由于kissy核心没有引用sizzle, 只支持一些简单的selector, 所以selector参数的值最好只为a， 对于一些不使用pjax的链接，可以通过filter函数参数进行过滤，具体的使用方法见下面的参数说明。
+
+
 ## 参数及含义
 
 === options.selector
