@@ -120,6 +120,8 @@ options.cache的值是缓存时间，单位为秒，默认为: 24*3600(一天)
 		}
 	}
 ```
+对于要过滤掉的URL， 需要返回值为true。
+
 === options.callback
 
 回调函数，这个函数不同于pjax.start和pjax.end（这2个事件下面描述）事件。
