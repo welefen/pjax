@@ -311,7 +311,7 @@
 		pjax.options = options;
 		pjax.options.success = pjax.success;
 		if (options.cache && (cache = Util.getCache(options.url, options.cache, options.storage))) {
-			options.beforeSend();
+			container.fire('pjax.start');
 			options.title = cache.title;
 			pjax.success(cache.data, true);
 			options.complete();
