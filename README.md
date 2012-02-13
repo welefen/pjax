@@ -158,7 +158,7 @@ options.cache的值是缓存时间，单位为秒，默认为: 24*3600(一天)
 	$('#container').bind('pjax.start', function(){
 		$('#loading').show();
 	})
-	$('#container').bind('pjax.start', function(){
+	$('#container').bind('pjax.end', function(){
 		$('#loading').hide();
 	})
 ```
