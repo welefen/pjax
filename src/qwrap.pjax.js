@@ -102,8 +102,8 @@
 		},
 		// 清除cache
 		removeCache : function(src) {
-			src = src || location.href;
-			delete Util.stack[Util.getRealUrl(src)];
+			src = Util.getRealUrl(src || location.href);
+			delete Util.stack[src];
 			if (Util.support.storage) {
 				var key = Util.getLocalKey(src);
 				localStorage.removeItem(key.data);
