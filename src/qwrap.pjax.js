@@ -214,7 +214,7 @@
 			if (hash != '') {
 				location.href = hash;
 				//for FF
-				if(/Firefox/.test(navigator.userAget)){
+				if(/Firefox/.test(navigator.userAgent)){
 					history.replaceState($.extend({}, pjax.state, {
 						url : null
 					}), document.title);
