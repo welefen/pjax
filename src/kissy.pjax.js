@@ -19,7 +19,7 @@ KISSY.add('pjax', function (S, DOM, Node, Event, Ajax) {
         // 获取URL不带hash的部分,且去掉pjax=true部分
         getRealUrl : function(url) {
             url = (url || '').replace(/\#.*?$/, '');
-            url = url.replace('?pjax=true', '').replace('&pjax=true', '');
+            url = url.replace('?pjax=true&', '?').replace('?pjax=true', '').replace('&pjax=true', '');
             return url;
         },
         // 获取url的hash部分
