@@ -144,7 +144,8 @@
 			options = $.extend(true, options, {
 				url : href,
 				element : this,
-				title: ''
+				title: '',
+				push: true
 			});
 			// 发起请求
 			pjax.request(options);
@@ -246,7 +247,7 @@
 			location.href = pjax.options.url;
 			return false;
 		}
-		var title = pjax.options.title, el;
+		var title = pjax.options.title || "", el;
 		if (!title) {
 			var matches = data.match(/<title>(.*?)<\/title>/);
 			if (matches) {
@@ -261,8 +262,8 @@
 			if (title.indexOf(pjax.options.titleSuffix) == -1) {
 				title += pjax.options.titleSuffix;
 			}
-			document.title = title;
 		}
+		document.title = title;
 		pjax.state = {
 			container : pjax.options.container,
 			timeout : pjax.options.timeout,
