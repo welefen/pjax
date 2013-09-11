@@ -143,7 +143,8 @@
 			event.preventDefault();
 			options = $.extend(true, options, {
 				url : href,
-				element : this
+				element : this,
+				title: ''
 			});
 			// 发起请求
 			pjax.request(options);
@@ -354,7 +355,9 @@
 					push : null,
 					timeout : state.timeout,
 					cache : state.cache,
-					storage : state.storage
+					storage : state.storage,
+					title: state.title,
+					element: null
 				};
 				pjax.request(data);
 			} else {
