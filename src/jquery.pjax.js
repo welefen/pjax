@@ -240,6 +240,10 @@
 		if (isCached !== true) {
 			isCached = false;
 		}
+		//accept Whole html
+		if (pjax.html) {
+			data = $(data).find(pjax.html).html();
+		}
 		if ((data || '').indexOf('<html') != -1) {
 			pjax.options.callback && pjax.options.callback.call(pjax.options.element, {
 				type : 'error'
