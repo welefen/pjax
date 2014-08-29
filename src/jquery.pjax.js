@@ -110,7 +110,7 @@
 			selector : '',
 			container : '',
 			callback : function() {},
-			fitler : function() {}
+			filter : function() {}
 		}, options);
 		if (!options.container || !options.selector) {
 			throw new Error('selector & container options must be set');

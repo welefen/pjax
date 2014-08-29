@@ -112,7 +112,7 @@ options.cache的值是缓存时间，单位为秒，默认为: 24*3600(一天)
 
 ```
 	{
-		fitler: function(href){
+		filter: function(href){
 			//对于wordpress后台的URL和wp-content里的URL不使用pjax
 			if(href.indexOf('/wp-admin') || href.indexOf('/wp-content')){
 				return true;
