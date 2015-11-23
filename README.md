@@ -1,3 +1,6 @@
+
+[WARNING] 该项目已经停止维护，愿意继续维护的同学请联系 welefen@gmail.com，可以把项目转给你。
+
 ## 介绍
 
 pushState是一个可以操作history的api，该api的介绍和使用请见这里：http://www.welefen.com/use-ajax-and-pushstate.html
