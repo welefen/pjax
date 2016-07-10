@@ -302,6 +302,9 @@
 	
 	// 发送请求
 	pjax.request = function(options) {
+		if(options.hasOwnProperty('data')){
+			pjax.defaultOptions.data=options.data;
+		}
 		options = $.extend(true, pjax.defaultOptions, options);
 		var cache, container = $(options.container);
 		options.oldUrl = options.url;
