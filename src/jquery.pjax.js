@@ -251,7 +251,7 @@
 			return false;
 		}
 		var title = pjax.options.title || "", el;
-		if (title != "" && pjax.options.element) {
+		if (title == "" && pjax.options.element) {
 			el = $(pjax.options.element);
 			title = el.attr('title') || el.text();
 		}
