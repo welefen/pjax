@@ -144,7 +144,6 @@
 			options = $.extend(true, options, {
 				url : href,
 				element : this,
-				title: '',
 				push: true
 			});
 			// 发起请求
@@ -252,7 +251,7 @@
 			return false;
 		}
 		var title = pjax.options.title || "", el;
-		if (pjax.options.element) {
+		if (title != "" && pjax.options.element) {
 			el = $(pjax.options.element);
 			title = el.attr('title') || el.text();
 		}
