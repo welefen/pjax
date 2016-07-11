@@ -144,7 +144,6 @@
 			options = $.extend(true, options, {
 				url : href,
 				element : this,
-				title: '',
 				push: true
 			});
 			// 发起请求
@@ -252,7 +251,7 @@
 			return false;
 		}
 		var title = pjax.options.title || "", el;
-		if (pjax.options.element) {
+		if (title == "" && pjax.options.element) {
 			el = $(pjax.options.element);
 			title = el.attr('title') || el.text();
 		}
@@ -303,6 +302,9 @@
 	
 	// 发送请求
 	pjax.request = function(options) {
+		if(options.hasOwnProperty('data')){
+			pjax.defaultOptions.data=options.data;
+		}
 		options = $.extend(true, pjax.defaultOptions, options);
 		var cache, container = $(options.container);
 		options.oldUrl = options.url;
