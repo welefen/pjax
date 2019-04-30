@@ -33,6 +33,28 @@ $.pjax({
   callback: function(){}
 })
 ```
+**注意：若设置 storage 为 true，为避免多次请求页面后导致本地 localStorage 容量不足而触发异常，请在页面加载完成后加载以下 JavaScript 代码清除已过期的记录。**
+
+```javascript
+if (!!window.localStorage) {
+    for (var key in localStorage) {
+        try {
+            if ((key.split("_") || [""])[0] === "pjax") {
+                var item = localStorage.getItem(key);
+                if (item) {
+                    item = JSON.parse(item);
+                    if ((parseInt(item.time) + 600 * 1000) <= new Date * 1) {
+                        localStorage.removeItem(key)
+                    }
+                }
+            }
+        } catch (e) { }
+    }
+}
+```
+
+
+
 ### qwrap版
 
 qwrap版需要在页面引入qwrap和对应的ajax组件。
